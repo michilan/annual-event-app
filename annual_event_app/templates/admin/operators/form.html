@@ -1,0 +1,28 @@
+{% extends 'admin/base.html' %}
+{% block title %}管理後台 - 操作員{% endblock %}
+{% block content %}
+<div class="py-4">
+    <h2>{{ '編輯' if operator else '新增' }}操作員</h2>
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label">姓名</label>
+            <input type="text" name="name" class="form-control" value="{{ operator.name if operator else '' }}" placeholder="例如：中區社執秘">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">所屬扶輪社</label>
+            <input type="text" name="club_name" class="form-control" value="{{ operator.club_name if operator else '' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">登入帳號</label>
+            <input type="text" name="login_account" class="form-control" value="{{ operator.login_account if operator else '' }}" required>
+            <div class="form-text">請使用英數字，若使用中文將以原樣建立帳號。</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">設定密碼</label>
+            <input type="password" name="password" class="form-control" placeholder="{{ '留空則保持不變' if operator else '未填寫時將以帳號作為初始密碼' }}">
+        </div>
+        <button type="submit" class="btn btn-primary">儲存</button>
+        <a href="{{ url_for('admin_operators') }}" class="btn btn-secondary">返回</a>
+    </form>
+</div>
+{% endblock %}

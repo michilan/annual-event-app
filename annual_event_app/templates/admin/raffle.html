@@ -1,0 +1,315 @@
+﻿{% extends 'admin/base.html' %}
+{% block title %}管理後台 - 抽獎管理{% endblock %}
+{% block content %}
+<div class="py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-lg-between align-items-lg-center gap-3 mb-3">
+        <h2 class="mb-0">抽獎管理中心</h2>
+        <div class="d-flex flex-wrap gap-3 align-items-end">
+            <div>
+                <label for="draw-phase-input" class="form-label mb-1">抽獎階段</label>
+                <input id="draw-phase-input" type="number" min="1" class="form-control" value="{{ phase_numbers[0] if phase_numbers else 1 }}">
+            </div>
+            <div>
+                <label for="draw-count-input" class="form-label mb-1">抽出人數</label>
+                <input id="draw-count-input" type="number" min="1" max="100" class="form-control" value="1">
+            </div>
+            <div class="d-flex gap-2 align-items-end">
+                <button id="draw-submit" type="button" class="btn btn-primary">立即抽出</button>
+                <a href="{{ url_for('admin_prizes') }}" class="btn btn-success">管理獎品</a>
+            </div>
+        </div>
+    </div>
+    <p class="text-muted small mb-3">這裡可以即時掌握各階段獎品名額、手動補登得獎者，並追蹤所有抽獎紀錄。重抽或刪除時，系統會自動釋出名額。</p>
+
+    <div class="alert alert-info d-flex flex-column flex-lg-row flex-wrap align-items-lg-center justify-content-between mb-4">
+        <span>目前符合抽獎資格的參加者共有 <strong>{{ eligible_count }}</strong> 位（已完成兩階段報到、完成節目評分，且尚未得獎）。</span>
+        <small class="text-muted">更新名單時請重新整理此頁面，即可看到最新統計。</small>
+    </div>
+
+    <form method="get" class="row gy-2 gx-3 align-items-end mb-4">
+        <div class="col-12 col-md-6 col-lg-4">
+            <label class="form-label">搜尋得獎紀錄</label>
+            <input type="text" class="form-control" name="q" value="{{ search }}" placeholder="輸入姓名、帳號、扶輪社或獎項名稱">
+        </div>
+        <div class="col-12 col-md-4 col-lg-3">
+            <label class="form-label">顯示階段</label>
+            <select class="form-select" name="phase">
+                <option value="all" {% if phase_filter == 'all' %}selected{% endif %}>全部階段</option>
+                {% for phase in phase_numbers %}
+                <option value="{{ phase }}" {% if phase_filter != 'all' and phase_filter|string == phase|string %}selected{% endif %}>第 {{ phase }} 階段</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">套用條件</button>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('admin_raffle') }}" class="btn btn-outline-secondary">清除條件</a>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        {% for item in phase_overview %}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-2">第 {{ item.phase }} 階段</h5>
+                    <div class="text-muted small">總數：{{ item.stats.total_quantity }}</div>
+                    <div class="text-muted small">已抽出：{{ item.stats.total_awarded }}</div>
+                    <div class="fw-semibold mt-2">剩餘名額：{{ item.stats.remaining }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if phase_sections %}
+        {% for section in phase_sections %}
+        <section class="mb-5" id="phase-{{ section.phase }}">
+            <div class="d-flex flex-column flex-lg-row justify-content-lg-between align-items-lg-center gap-2 mb-3">
+                <div>
+                    <h3 class="mb-0">第 {{ section.phase }} 階段得獎紀錄</h3>
+                    <div class="text-muted small">剩餘名額：{{ section.stats.remaining }} / 總數 {{ section.stats.total_quantity }}</div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-primary draw-phase-trigger" data-phase="{{ section.phase }}">抽出第 {{ section.phase }} 階段</button>
+                    <a href="{{ url_for('admin_prizes') }}" class="btn btn-outline-secondary">前往獎品列表</a>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">手動新增第 {{ section.phase }} 階段得獎者</div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('admin_raffle_manual') }}" class="row g-3 align-items-end manual-form" data-phase="{{ section.phase }}">
+                        <input type="hidden" name="phase" value="{{ section.phase }}">
+                        <input type="hidden" name="return_url" value="{{ return_url }}">
+                        <div class="col-12 col-lg-4">
+                            <label class="form-label">參加者編號 / 帳號</label>
+                            <input type="text" name="attendee_identifier" class="form-control" placeholder="輸入 ID、帳號或姓名" required>
+                        </div>
+                        <div class="col-12 col-lg-4">
+                            <label class="form-label">獎項</label>
+                            <select name="prize_id" class="form-select manual-prize-select">
+                                <option value="">手動輸入獎項</option>
+                                {% for prize in section.prizes %}
+                                {% set remaining = prize.quantity - prize.awarded_count %}
+                                <option value="{{ prize.id }}" data-performance-id="{{ prize.performance_id }}" data-name="{{ prize.name }}" data-description="{{ prize.description|default('', true)|e }}" {% if remaining <= 0 %}disabled{% endif %}>
+                                    {{ prize.name }}（剩餘 {{ remaining if remaining > 0 else 0 }} / 總數 {{ prize.quantity }}）
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if not section.prizes %}
+                            <div class="form-text text-warning">尚未設定此階段的獎項，可至「管理獎品」新增。</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-lg-4">
+                            <label class="form-label">節目</label>
+                            <select name="performance_id" class="form-select manual-performance">
+                                <option value="">請選擇</option>
+                                {% for perf in performances %}
+                                <option value="{{ perf.id }}">{{ perf.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12 col-xl-6">
+                            <label class="form-label">獎品名稱</label>
+                            <input type="text" name="prize_name" class="form-control manual-prize-name" placeholder="若選擇獎項會自動帶入">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">獎品描述 / 備註</label>
+                            <textarea name="prize_description" class="form-control manual-prize-desc" rows="2" placeholder="非必填，可輸入獎品規格或備註"></textarea>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-success">新增得獎者</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">記錄 ID</th>
+                            <th scope="col">參加者</th>
+                            <th scope="col">扶輪社</th>
+                            <th scope="col">節目</th>
+                            <th scope="col">資格狀態</th>
+                            <th scope="col">獎項</th>
+                            <th scope="col">抽出時間</th>
+                            <th scope="col" style="width: 180px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in section.results %}
+                        {% set attendee = r.attendee %}
+                        <tr>
+                            <td>{{ r.id }}</td>
+                            <td>
+                                {% if attendee %}
+                                    <div>{{ attendee.name }}{% if attendee.call_name %}<span class="text-muted"> ({{ attendee.call_name }})</span>{% endif %}</div>
+                                    <div class="text-muted small">編號：{{ r.attendee_id }}{% if attendee.login_account %}｜帳號：{{ attendee.login_account }}{% endif %}</div>
+                                {% else %}
+                                    <div>—</div>
+                                    <div class="text-muted small">編號：{{ r.attendee_id }}</div>
+                                {% endif %}
+                            </td>
+                            <td>{{ attendee.club_name if attendee and attendee.club_name else '—' }}</td>
+                            <td>{{ r.performance.title if r.performance else '—' }}</td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <span class="badge {% if attendee and attendee.event_checked_in %}bg-success{% else %}bg-secondary{% endif %}" title="大會報到">大會報到{% if attendee and attendee.event_checked_in %}✓{% else %}✕{% endif %}</span>
+                                    <span class="badge {% if attendee and attendee.show_checked_in %}bg-success{% else %}bg-secondary{% endif %}" title="節目報到">節目報到{% if attendee and attendee.show_checked_in %}✓{% else %}✕{% endif %}</span>
+                                    <span class="badge {% if attendee and attendee.has_voted %}bg-info text-dark{% else %}bg-secondary{% endif %}" title="節目評分">節目評分{% if attendee and attendee.has_voted %}完成{% else %}未完成{% endif %}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>{{ r.prize_name or '—' }}</div>
+                                {% if r.prize_description %}<div class="text-muted small">{{ r.prize_description }}</div>{% endif %}
+                            </td>
+                            <td>{{ r.drawn_at.strftime('%Y-%m-%d %H:%M:%S') if r.drawn_at else '—' }}</td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <form method="post" action="{{ url_for('admin_raffle_redraw', result_id=r.id) }}" class="d-inline">
+                                        <input type="hidden" name="return_url" value="{{ return_url }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">重抽</button>
+                                    </form>
+                                    <form method="post" action="{{ url_for('admin_raffle_delete', result_id=r.id) }}" class="d-inline" onsubmit="return confirm('確定要刪除此得獎紀錄嗎？');">
+                                        <input type="hidden" name="return_url" value="{{ return_url }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">刪除</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if section.results|length == 0 %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">目前尚無符合條件的得獎紀錄。</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-light border text-muted">暫無可顯示的抽獎階段，請先於「管理獎品」新增獎項。</div>
+    {% endif %}
+</div>
+
+<script>
+(function() {
+    const drawBatchUrl = "{{ url_for('api_raffle_draw_batch') }}";
+    const phaseInput = document.getElementById('draw-phase-input');
+    const countInput = document.getElementById('draw-count-input');
+    const submitBtn = document.getElementById('draw-submit');
+
+    function toInt(value, fallback) {
+        const num = parseInt(value, 10);
+        return Number.isNaN(num) ? fallback : num;
+    }
+
+    async function drawPhase(phase, count) {
+        try {
+            const res = await fetch(drawBatchUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phase, count })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.error || '抽獎失敗，請稍後再試。');
+                return;
+            }
+            const winners = (data.results || []).map((item, idx) => {
+                const name = item.name || '未命名';
+                const prize = item.prize_name || '未設定獎項';
+                const attendeeId = item.attendee_id ? `（ID ${item.attendee_id}）` : '';
+                return `${idx + 1}. ${name}${attendeeId} - ${prize}`;
+            }).join('\n');
+            let message = `第 ${data.phase} 階段抽出 ${data.count} 位得獎者：\n${winners}`;
+            if (data.warning) {
+                message += `\n\n提示：${data.warning}`;
+            }
+            alert(message);
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+            alert('系統發生錯誤，請稍後再試。');
+        }
+    }
+
+    if (submitBtn) {
+        submitBtn.addEventListener('click', () => {
+            const phase = toInt(phaseInput && phaseInput.value, 1);
+            const count = toInt(countInput && countInput.value, 1);
+            if (!Number.isInteger(phase) || phase < 1) {
+                alert('請輸入有效的抽獎階段。');
+                return;
+            }
+            if (!Number.isInteger(count) || count < 1) {
+                alert('請輸入有效的抽出人數。');
+                return;
+            }
+            if (count > 100) {
+                alert('一次最多只能抽出 100 位得獎者。');
+                return;
+            }
+            drawPhase(phase, count);
+        });
+    }
+
+    document.querySelectorAll('.draw-phase-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const phase = parseInt(btn.dataset.phase, 10);
+            if (!phase) {
+                alert('找不到抽獎階段。');
+                return;
+            }
+            const input = prompt(`請輸入要抽出的名額數量（第 ${phase} 階段，預設 1 名）：`, '1');
+            if (input === null) {
+                return;
+            }
+            const count = parseInt(input, 10);
+            if (!Number.isInteger(count) || count <= 0) {
+                alert('請輸入有效的抽出人數。');
+                return;
+            }
+            if (count > 100) {
+                alert('一次最多只能抽出 100 位得獎者。');
+                return;
+            }
+            drawPhase(phase, count);
+        });
+    });
+
+    document.querySelectorAll('form.manual-form').forEach(form => {
+        const prizeSelect = form.querySelector('.manual-prize-select');
+        const nameInput = form.querySelector('.manual-prize-name');
+        const descInput = form.querySelector('.manual-prize-desc');
+        const perfSelect = form.querySelector('.manual-performance');
+        if (!prizeSelect) {
+            return;
+        }
+        prizeSelect.addEventListener('change', () => {
+            const option = prizeSelect.options[prizeSelect.selectedIndex];
+            if (!option) {
+                return;
+            }
+            const prizeName = option.getAttribute('data-name') || '';
+            const prizeDesc = option.getAttribute('data-description') || '';
+            const performanceId = option.getAttribute('data-performance-id') || '';
+            if (prizeName && nameInput) {
+                nameInput.value = prizeName;
+            }
+            if (descInput) {
+                descInput.value = prizeDesc;
+            }
+            if (perfSelect && performanceId) {
+                perfSelect.value = performanceId;
+            }
+        });
+    });
+})();
+</script>
+{% endblock %}

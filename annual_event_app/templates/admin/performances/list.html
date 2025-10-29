@@ -1,0 +1,35 @@
+{% extends 'admin/base.html' %}
+{% block title %}管理後台 - 節目{% endblock %}
+{% block content %}
+<div class="py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>節目列表</h2>
+        <a href="{{ url_for('admin_performances_new') }}" class="btn btn-success">新增節目</a>
+    </div>
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+            <tr>
+                <th>ID</th>
+                <th>標題</th>
+                <th>描述</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in performances %}
+            <tr>
+                <td>{{ p.id }}</td>
+                <td>{{ p.title }}</td>
+                <td>{{ p.description }}</td>
+                <td>
+                    <a href="{{ url_for('admin_performances_edit', performance_id=p.id) }}" class="btn btn-sm btn-primary">編輯</a>
+                    <form method="post" action="{{ url_for('admin_performances_delete', performance_id=p.id) }}" style="display:inline-block;" onsubmit="return confirm('確定刪除？');">
+                        <button type="submit" class="btn btn-sm btn-danger">刪除</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

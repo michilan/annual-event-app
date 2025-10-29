@@ -1,0 +1,58 @@
+﻿{% extends 'admin/base.html' %}
+{% block title %}管理後台 - 獎品{% endblock %}
+{% block content %}
+<div class="py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
+        <h2 class="mb-0">獎品清單</h2>
+        <a href="{{ url_for('admin_prizes_new') }}" class="btn btn-success">新增獎品</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle text-nowrap">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col" style="width: 140px;">圖片</th>
+                    <th scope="col">名稱</th>
+                    <th scope="col">節目</th>
+                    <th scope="col">描述</th>
+                    <th scope="col">數量</th>
+                    <th scope="col">已抽出</th>
+                    <th scope="col">階段</th>
+                    <th scope="col">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in prizes %}
+                <tr>
+                    <td>{{ p.id }}</td>
+                    <td class="text-center">
+                        {% if p.image_path %}
+                        <img src="{{ url_for('static', filename=p.image_path) }}" alt="{{ p.name }}" class="img-thumbnail" style="max-height: 90px;">
+                        {% else %}
+                        <span class="text-muted small">未上傳</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.name }}</td>
+                    <td>{{ p.performance.title }}</td>
+                    <td class="text-wrap" style="max-width: 260px;">{{ p.description or '—' }}</td>
+                    <td>{{ p.quantity }}</td>
+                    <td>{{ p.awarded_count }}</td>
+                    <td>第 {{ p.phase }} 階段</td>
+                    <td>
+                        <a href="{{ url_for('admin_prizes_edit', prize_id=p.id) }}" class="btn btn-sm btn-primary me-1">編輯</a>
+                        <form method="post" action="{{ url_for('admin_prizes_delete', prize_id=p.id) }}" class="d-inline" onsubmit="return confirm('確定要刪除此獎品嗎？');">
+                            <button type="submit" class="btn btn-sm btn-danger">刪除</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">尚未設定任何獎品。</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

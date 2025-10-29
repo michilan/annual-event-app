@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>社務執秘報到面板</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <style>
+    body {
+        background: linear-gradient(150deg, #1c92d2 0%, #f2fcfe 100%);
+        min-height: 100vh;
+        padding: clamp(1.5rem, 5vw, 3rem);
+        font-size: 18px;
+    }
+    .head-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 28px;
+        box-shadow: 0 25px 55px rgba(0, 0, 0, 0.18);
+        padding: clamp(1.5rem, 4vw, 2.5rem);
+        margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+    }
+    .head-card h1 {
+        font-size: clamp(2rem, 4.5vw, 2.6rem);
+        font-weight: 700;
+        color: #0d3d5c;
+    }
+    .head-card .meta {
+        color: #5d6d83;
+        margin: 0.35rem 0;
+    }
+    .attendee-grid {
+        display: grid;
+        gap: clamp(1rem, 3vw, 1.5rem);
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .attendee-card {
+        background: rgba(255, 255, 255, 0.94);
+        border-radius: 22px;
+        padding: 1.25rem;
+        box-shadow: 0 16px 32px rgba(13, 61, 92, 0.16);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .attendee-card h5 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #1a3a5a;
+    }
+    .badge-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.9rem;
+        background: #e9f3ff;
+        color: #0d47a1;
+    }
+    .status-row { display: grid; gap: 0.4rem; }
+    .status-pill { padding: 0.4rem 0.75rem; border-radius: 12px; font-size: 0.92rem; font-weight: 600; display: inline-block; }
+    .action-group { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .action-group form { flex: 1 1 48%; }
+    .action-group button { width: 100%; border-radius: 12px; padding: 0.65rem; font-size: 0.95rem; box-shadow: 0 12px 20px rgba(13, 61, 92, 0.14); }
+    @media (max-width: 576px) { body { font-size: 17px; padding: 1.25rem; } .action-group form { flex: 1 1 100%; } }
+    </style>
+</head>
+<body>
+    <div class="head-card">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
+            <div>
+                <h1>{{ operator.name or '社務執秘' }}</h1>
+                <p class="meta mb-0">管理社別：{{ operator.club_name }}</p>
+                <p class="meta">登入帳號：{{ operator.login_account }}</p>
+            </div>
+            <div class="text-md-end">
+                <a href="{{ url_for('operator_logout') }}" class="btn btn-outline-danger">登出</a>
+            </div>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mt-3">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    {% if raffle_results %}
+    <div class="head-card">
+        <h2 class="mb-3">本社最新得獎資訊</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">得獎者</th>
+                        <th scope="col">抽獎階段</th>
+                        <th scope="col">獎項</th>
+                        <th scope="col">抽出時間</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in raffle_results %}
+                    <tr>
+                        <td>{{ result.attendee.name if result.attendee else '—' }}</td>
+                        <td>第 {{ result.phase }} 階段</td>
+                        <td>{{ result.prize_name or (result.prize.name if result.prize else '—') }}</td>
+                        <td>{{ result.drawn_at.strftime('%Y-%m-%d %H:%M:%S') if result.drawn_at else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="attendee-grid">
+        {% for attendee in attendees %}
+        <div class="attendee-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5>{{ attendee.name }}</h5>
+                    {% if attendee.call_name %}
+                    <div class="text-muted small">暱稱：{{ attendee.call_name }}</div>
+                    {% endif %}
+                    <div class="text-muted small">報到編號：{{ attendee.id }}</div>
+                </div>
+                <span class="badge-tag">{{ attendee.club_name or '未指定' }}</span>
+            </div>
+            <div class="status-row">
+                <span class="status-pill bg-{{ 'success text-white' if attendee.event_checked_in else 'secondary text-white' }}">第一階段：{{ '已完成' if attendee.event_checked_in else '待報到' }}</span>
+                <span class="status-pill bg-{{ 'success text-white' if attendee.show_checked_in else ('warning text-dark' if attendee.event_checked_in else 'secondary text-white') }}">第二階段：{% if attendee.show_checked_in %}已入場{% elif attendee.event_checked_in %}待入場{% else %}尚未開放{% endif %}</span>
+                <span class="status-pill bg-{{ 'success text-white' if attendee.has_voted else 'secondary text-white' }}">節目評分：{{ '已完成' if attendee.has_voted else '尚未完成' }}</span>
+            </div>
+            <div class="action-group">
+                <form method="post" action="{{ url_for('operator_checkin', stage='event', attendee_id=attendee.id) }}">
+                    <button type="submit" class="btn btn-outline-primary" {% if attendee.event_checked_in %}disabled{% endif %}>第一階段報到</button>
+                </form>
+                <form method="post" action="{{ url_for('operator_checkin', stage='show', attendee_id=attendee.id) }}">
+                    <button type="submit" class="btn btn-outline-success" {% if not attendee.event_checked_in or attendee.show_checked_in %}disabled{% endif %}>第二階段報到</button>
+                </form>
+                <form method="post" action="{{ url_for('operator_checkin', stage='reset', attendee_id=attendee.id) }}">
+                    <button type="submit" class="btn btn-outline-secondary">重置狀態</button>
+                </form>
+                <a class="btn btn-outline-warning" href="{{ url_for('attendee_raffle_result', attendee_id=attendee.id) }}">抽獎結果</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="attendee-card">
+            <h5>尚未有參加者</h5>
+            <p class="text-muted mb-0">請確認匯入資料是否包含「{{ operator.club_name }}」社別。</p>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

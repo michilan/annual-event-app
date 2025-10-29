@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>個人參加資訊</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <style>
+    body {
+        background: #f4f5f7;
+        font-size: 18px;
+        line-height: 1.6;
+    }
+    .hero {
+        background: linear-gradient(140deg, #0d6efd 0%, #6610f2 100%);
+        color: #fff;
+        padding: 3rem 1rem;
+        text-align: center;
+    }
+    .hero h1 {
+        font-size: clamp(2.2rem, 4vw, 3rem);
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    .status-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 2rem 1.75rem;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.1);
+        margin-top: -80px;
+        position: relative;
+        z-index: 10;
+    }
+    .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1.25rem;
+        margin-top: 1.5rem;
+    }
+    .status-item {
+        border: 2px solid #e9ecef;
+        border-radius: 16px;
+        padding: 1rem;
+        text-align: center;
+    }
+    .status-item h3 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #495057; }
+    .status-item .badge { font-size: 1rem; padding: 0.6rem 1rem; }
+    .action-buttons .btn { font-size: 1.2rem; padding: 0.85rem 1.5rem; }
+    @media (max-width: 576px) {
+        body { font-size: 17px; }
+        .status-card { padding: 1.75rem 1.25rem; margin-top: -60px; }
+        .status-item { padding: 0.85rem; }
+    }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <h1>歡迎 {{ attendee.name }} 參與年會</h1>
+        <p>您的報到、評分與抽獎資格都會在此即時更新。</p>
+    </header>
+
+    <main class="container pb-5">
+        <div class="status-card">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+                <div>
+                    <h2 class="mb-0">{{ attendee.name }}</h2>
+                    {% if attendee.call_name %}
+                    <div class="text-muted">暱稱：{{ attendee.call_name }}</div>
+                    {% endif %}
+                    <div class="text-muted">扶輪社：{{ attendee.club_name or '未提供' }}</div>
+                    <div class="text-muted">地區：{{ attendee.district or '未提供' }}</div>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-dark fs-5">編號 {{ "%04d"|format(attendee.id) }}</span>
+                </div>
+            </div>
+
+            <div class="status-grid">
+                <div class="status-item">
+                    <h3>第 1 階段：大會報到</h3>
+                    <span class="badge bg-{{ 'success' if attendee.event_checked_in else 'secondary' }}">
+                        {{ '已完成' if attendee.event_checked_in else '尚未完成' }}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <h3>第 2 階段：節目報到</h3>
+                    {% if attendee.show_checked_in %}
+                    <span class="badge bg-success">已入場</span>
+                    {% elif attendee.event_checked_in %}
+                    <span class="badge bg-warning text-dark">待入場</span>
+                    {% else %}
+                    <span class="badge bg-secondary">尚未開放</span>
+                    {% endif %}
+                </div>
+                <div class="status-item">
+                    <h3>節目評分</h3>
+                    {% if attendee.has_voted %}
+                    <span class="badge bg-success">已完成</span>
+                    {% elif attendee.show_checked_in %}
+                    <span class="badge bg-info text-dark">可填寫</span>
+                    {% else %}
+                    <span class="badge bg-secondary">待開放</span>
+                    {% endif %}
+                </div>
+                <div class="status-item">
+                    <h3>抽獎資格</h3>
+                    {% if attendee.has_drawn %}
+                    <span class="badge bg-warning text-dark">已中獎</span>
+                    {% elif attendee.show_checked_in and attendee.has_voted %}
+                    <span class="badge bg-info text-dark">資格生效</span>
+                    {% else %}
+                    <span class="badge bg-secondary">尚未符合</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if raffle_result %}
+            <div class="alert alert-success mt-4" role="alert">
+                恭喜！您已在第 {{ raffle_result.phase }} 階段抽中 <strong>{{ raffle_result.prize_name or '獎項' }}</strong>。
+            </div>
+            {% else %}
+            <div class="alert alert-info mt-4" role="alert">
+                尚未抽中獎項，請持續關注抽獎直播。
+            </div>
+            {% endif %}
+
+            <p class="text-muted mt-3 mb-4">
+                若需更新報到或評分狀態，請洽現場工作人員或各社執秘協助。
+            </p>
+
+            <div class="d-flex flex-wrap gap-3 action-buttons">
+                <a class="btn btn-outline-success" href="{{ url_for('scoreboard') }}">節目成績看板</a>
+                <a class="btn btn-outline-warning" href="{{ url_for('attendee_raffle_result', attendee_id=attendee.id) }}">抽獎紀錄</a>
+                <a class="btn btn-outline-secondary" href="{{ url_for('raffle_page') }}">抽獎直播</a>
+                <a class="btn btn-outline-dark" href="{{ url_for('index', attendee_id=attendee.id) }}">返回首頁</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

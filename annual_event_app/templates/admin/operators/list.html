@@ -1,0 +1,40 @@
+{% extends 'admin/base.html' %}
+{% block title %}管理後台 - 操作員{% endblock %}
+{% block content %}
+<div class="py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>社務執秘列表</h2>
+        <a href="{{ url_for('admin_operators_new') }}" class="btn btn-success">新增操作員</a>
+    </div>
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+            <tr>
+                <th>ID</th>
+                <th>姓名</th>
+                <th>所屬社</th>
+                <th>登入帳號</th>
+                <th>建立時間</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for op in operators %}
+            <tr>
+                <td>{{ op.id }}</td>
+                <td>{{ op.name or '—' }}</td>
+                <td>{{ op.club_name }}</td>
+                <td>{{ op.login_account }}</td>
+                <td>{{ op.created_at.strftime('%Y-%m-%d %H:%M:%S') if op.created_at else '—' }}</td>
+                <td>
+                    <a href="{{ url_for('admin_operators_edit', operator_id=op.id) }}" class="btn btn-sm btn-primary">編輯</a>
+                    <form method="post" action="{{ url_for('admin_operators_delete', operator_id=op.id) }}"
+                          style="display:inline-block;" onsubmit="return confirm('確定要刪除此操作員嗎？');">
+                        <button type="submit" class="btn btn-sm btn-danger">刪除</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

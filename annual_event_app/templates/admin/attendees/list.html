@@ -1,0 +1,163 @@
+﻿{% extends 'admin/base.html' %}
+
+{% block title %}管理後台 - 參加者{% endblock %}
+
+{% block content %}
+<div class="py-4">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-3 mb-3">
+        <h2 class="mb-0">參加者列表</h2>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ export_url }}" class="btn btn-outline-secondary">匯出 CSV</a>
+            <a href="{{ url_for('admin_attendees_new') }}" class="btn btn-success">新增參加者</a>
+        </div>
+    </div>
+
+    <form method="get" class="row gy-2 gx-3 align-items-end mb-4">
+        <div class="col-12 col-md-4">
+            <label class="form-label">關鍵字搜尋</label>
+            <input type="text" class="form-control" name="q" value="{{ search }}" placeholder="輸入編號、帳號、姓名、社別">
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="event" value="1" id="filterEvent" {% if status_flags['event'] %}checked{% endif %}>
+                <label class="form-check-label" for="filterEvent">已完成大會報到</label>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="show" value="1" id="filterShow" {% if status_flags['show'] %}checked{% endif %}>
+                <label class="form-check-label" for="filterShow">已完成節目報到</label>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="voted" value="1" id="filterVoted" {% if status_flags['voted'] %}checked{% endif %}>
+                <label class="form-check-label" for="filterVoted">已完成評分</label>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="drawn" value="1" id="filterDrawn" {% if status_flags['drawn'] %}checked{% endif %}>
+                <label class="form-check-label" for="filterDrawn">已中獎</label>
+            </div>
+        </div>
+        <div class="col-12 col-md-2">
+            <label class="form-label">每頁顯示</label>
+            <div class="input-group">
+                <select class="form-select" name="per_page" onchange="this.form.submit()">
+                    {% for option in per_page_options %}
+                    <option value="{{ option }}" {% if per_page == option %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                </select>
+                <span class="input-group-text">筆</span>
+            </div>
+            <input type="hidden" name="page" value="1">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">套用條件</button>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('admin_attendees') }}" class="btn btn-outline-secondary">清除條件</a>
+        </div>
+    </form>
+
+    <form method="post" action="{{ url_for('admin_attendees_bulk') }}">
+        <input type="hidden" name="return_url" value="{{ request.full_path }}">
+        <div class="table-responsive mb-3">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col"><input type="checkbox" id="selectAll"></th>
+                        <th scope="col">ID</th>
+                        <th scope="col">登入帳號</th>
+                        <th scope="col">姓名</th>
+                        <th scope="col">暱稱</th>
+                        <th scope="col">扶輪社</th>
+                        <th scope="col">地區</th>
+                        <th scope="col">大會報到</th>
+                        <th scope="col">節目報到</th>
+                        <th scope="col">已評分</th>
+                        <th scope="col">已中獎</th>
+                        <th scope="col">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in attendees %}
+                    <tr>
+                        <td><input type="checkbox" class="row-check" name="selected_ids" value="{{ a.id }}"></td>
+                        <td>{{ a.id }}</td>
+                        <td>{{ a.login_account or '--' }}</td>
+                        <td>{{ a.name }}</td>
+                        <td>{{ a.call_name or '--' }}</td>
+                        <td>{{ a.club_name or '--' }}</td>
+                        <td>{{ a.district or '--' }}</td>
+                        <td>{{ '是' if a.event_checked_in else '否' }}</td>
+                        <td>{{ '是' if a.show_checked_in else '否' }}</td>
+                        <td>{{ '是' if a.has_voted else '否' }}</td>
+                        <td>{{ '是' if a.has_drawn else '否' }}</td>
+                        <td>
+                            <a href="{{ url_for('admin_attendees_edit', attendee_id=a.id) }}" class="btn btn-sm btn-primary">編輯</a>
+                            <form method="post" action="{{ url_for('admin_attendees_delete', attendee_id=a.id) }}" style="display:inline-block;" onsubmit="return confirm('確定要刪除此參加者嗎？');">
+                                <button type="submit" class="btn btn-sm btn-danger">刪除</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="12" class="text-center text-muted py-4">目前沒有符合條件的參加者。</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex flex-column flex-md-row gap-2 align-items-md-center justify-content-md-between">
+            <div class="input-group">
+                <label class="input-group-text" for="bulkAction">批次操作</label>
+                <select class="form-select" name="action" id="bulkAction" required>
+                    <option value="" selected disabled>請選擇</option>
+                    <option value="event_on">標記為已完成第一階段報到</option>
+                    <option value="show_on">標記為已完成第二階段報到</option>
+                    <option value="vote_on">標記為已完成評分</option>
+                    <option value="reset_flags">重置報到與評分狀態</option>
+                </select>
+                <button type="submit" class="btn btn-outline-primary">套用</button>
+            </div>
+            <small class="text-muted">請勾選要處理的參加者後套用批次操作。</small>
+        </div>
+    </form>
+
+    {% if pagination.pages > 1 %}
+    <nav class="mt-4" aria-label="Attendee pagination">
+        <ul class="pagination justify-content-center flex-wrap gap-1">
+            <li class="page-item{% if not pagination.has_prev %} disabled{% endif %}">
+                <a class="page-link" href="{% if pagination.has_prev %}{{ pagination_url(pagination.prev_num) }}{% else %}#{% endif %}">上一頁</a>
+            </li>
+            {% for page_number in pagination.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+                {% if page_number %}
+                    <li class="page-item{% if page_number == pagination.page %} active{% endif %}">
+                        <a class="page-link" href="{{ pagination_url(page_number) }}">{{ page_number }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                {% endif %}
+            {% endfor %}
+            <li class="page-item{% if not pagination.has_next %} disabled{% endif %}">
+                <a class="page-link" href="{% if pagination.has_next %}{{ pagination_url(pagination.next_num) }}{% else %}#{% endif %}">下一頁</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<script>
+const selectAll = document.getElementById('selectAll');
+const rowChecks = document.querySelectorAll('.row-check');
+if (selectAll) {
+    selectAll.addEventListener('change', () => {
+        rowChecks.forEach(cb => cb.checked = selectAll.checked);
+    });
+}
+</script>
+
+{% endblock %}

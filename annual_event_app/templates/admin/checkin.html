@@ -1,0 +1,91 @@
+{% extends 'admin/base.html' %}
+{% block title %}管理後台 - 報到工具{% endblock %}
+{% block content %}
+<div class="py-4">
+    <h2 class="mb-3">報到工具</h2>
+    <p class="text-muted">此頁面提供工作人員快速更新第一、第二階段報到狀態，並可查閱評分與抽獎資格。</p>
+
+    {% if message %}
+    <div class="alert alert-{{ message[0] }}">{{ message[1] }}</div>
+    {% endif %}
+
+    <form method="post" class="row g-3 align-items-end mb-4">
+        <div class="col-sm-4">
+            <label for="attendee_id" class="form-label">參加者編號</label>
+            <input type="number" min="1" class="form-control" id="attendee_id" name="attendee_id"
+                   value="{{ attendee.id if attendee else '' }}" required>
+        </div>
+        <div class="col-sm-4">
+            <label for="stage" class="form-label">操作項目</label>
+            <select class="form-select" id="stage" name="stage">
+                <option value="event">第一階段報到（大會）</option>
+                <option value="show">第二階段報到（節目）</option>
+                <option value="reset">清除全部旗標</option>
+            </select>
+        </div>
+        <div class="col-sm-4 d-grid">
+            <button type="submit" class="btn btn-primary">送出更新</button>
+        </div>
+    </form>
+
+    {% if attendee %}
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <strong>{{ attendee.name }}</strong>
+            <span class="badge bg-secondary ms-2">編號 {{ "%04d"|format(attendee.id) }}</span>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">暱稱</dt>
+                <dd class="col-sm-9">{{ attendee.call_name or '未提供' }}</dd>
+                <dt class="col-sm-3">扶輪社</dt>
+                <dd class="col-sm-9">{{ attendee.club_name or '未提供' }}</dd>
+                <dt class="col-sm-3">地區</dt>
+                <dd class="col-sm-9">{{ attendee.district or '未提供' }}</dd>
+            </dl>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="p-3 border rounded text-center">
+                        <div class="text-muted mb-2">第一階段</div>
+                        <span class="badge bg-{{ 'success' if attendee.event_checked_in else 'secondary' }}">
+                            {{ '已完成' if attendee.event_checked_in else '待報到' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 border rounded text-center">
+                        <div class="text-muted mb-2">第二階段</div>
+                        <span class="badge bg-{{ 'success' if attendee.show_checked_in else 'secondary' }}">
+                            {{ '已入場' if attendee.show_checked_in else '待入場' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 border rounded text-center">
+                        <div class="text-muted mb-2">節目評分</div>
+                        <span class="badge bg-{{ 'success' if attendee.has_voted else 'secondary' }}">
+                            {{ '已完成' if attendee.has_voted else '尚未完成' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 border rounded text-center">
+                        <div class="text-muted mb-2">抽獎狀態</div>
+                        {% if attendee.has_drawn %}
+                        <span class="badge bg-warning text-dark">已中獎</span>
+                        {% else %}
+                        <span class="badge bg-secondary">尚未中獎</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 d-flex flex-wrap gap-2">
+                <a href="{{ url_for('attendee_raffle_result', attendee_id=attendee.id) }}" class="btn btn-outline-secondary btn-sm">檢視抽獎紀錄</a>
+                <a href="{{ url_for('index', attendee_id=attendee.id) }}" class="btn btn-outline-secondary btn-sm">開啟參加者畫面</a>
+                <a href="{{ url_for('vote', attendee_id=attendee.id) }}" class="btn btn-outline-success btn-sm">代開評分頁面</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

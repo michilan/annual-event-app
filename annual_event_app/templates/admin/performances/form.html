@@ -1,0 +1,19 @@
+{% extends 'admin/base.html' %}
+{% block title %}管理後台 - 節目{% endblock %}
+{% block content %}
+<div class="py-4">
+    <h2>{{ '編輯' if performance else '新增' }}節目</h2>
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label">標題</label>
+            <input type="text" name="title" class="form-control" value="{{ performance.title if performance else '' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">描述</label>
+            <textarea name="description" class="form-control" rows="3">{{ performance.description if performance else '' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">儲存</button>
+        <a href="{{ url_for('admin_performances') }}" class="btn btn-secondary">取消</a>
+    </form>
+</div>
+{% endblock %}

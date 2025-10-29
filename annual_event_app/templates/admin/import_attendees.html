@@ -1,0 +1,18 @@
+﻿{% extends 'admin/base.html' %}
+{% block title %}管理後台 - 匯入參加者{% endblock %}
+{% block content %}
+<div class="py-4">
+    <h2>批次上傳參加者</h2>
+    <p>請上傳符合欄位的 CSV 檔案：<code>name,call_name,club_name,district,event_checked_in,show_checked_in,has_voted,has_drawn,login_account,password</code>。為相容舊格式，亦接受 <code>checked_in</code> 表示第一階段報到。</p>
+    {% if message %}
+    <div class="alert alert-info">{{ message }}</div>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <input type="file" name="file" accept=".csv" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">匯入</button>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">返回</a>
+    </form>
+</div>
+{% endblock %}
