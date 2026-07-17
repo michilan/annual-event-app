@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>有朋科技｜澄清醫院印表機租賃方案互動試算</title>
+<style>
+:root{
+  --bg:#f4f7fb;--card:#fff;--ink:#132238;--muted:#607089;--line:#dce4ef;
+  --brand:#165c9c;--brand2:#0f766e;--soft:#eef5fb;--good:#087f5b;--warn:#a85b00;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55}
+.wrap{max-width:1240px;margin:auto;padding:22px}
+.hero{background:linear-gradient(135deg,#154f88,#0e766e);color:#fff;border-radius:20px;padding:26px;box-shadow:0 16px 40px rgba(15,35,60,.12)}
+.hero h1{margin:0 0 8px;font-size:clamp(25px,3vw,39px)}
+.hero p{margin:3px 0;opacity:.93}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}
+button{border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}
+.btn-white{background:#fff;color:#154f88}.btn-ghost{background:rgba(255,255,255,.13);color:#fff;border:1px solid rgba(255,255,255,.3)}
+.btn-dark{background:#17243a;color:#fff}.btn-soft{background:#e8eff8;color:#243650}.btn-green{background:#0f766e;color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 10px 28px rgba(20,35,60,.07)}
+.meta{margin-top:18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field.full{grid-column:1/-1}
+label{font-size:13px;font-weight:800;color:#43536b}
+input,select,textarea{width:100%;border:1px solid #cbd7e5;border-radius:9px;padding:10px 11px;font:inherit;color:var(--ink);background:#fff}
+textarea{min-height:76px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:3px solid rgba(22,92,156,.12);border-color:#5d91c2}
+.section-title{font-size:15px;font-weight:900;margin:17px 0 9px;border-bottom:1px solid var(--line);padding-bottom:7px}
+.plan-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.plan-title h2{margin:0;font-size:24px}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#e8f1fb;color:#174d7a;font-size:12px;font-weight:900}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:15px}
+.metric{border:1px solid var(--line);background:#f8fafc;border-radius:12px;padding:12px}
+.metric .k{font-size:12px;color:var(--muted);font-weight:800}.metric .v{font-size:22px;font-weight:950;margin-top:3px}
+.metric.primary .v{color:var(--brand)}.metric.good .v{color:var(--good)}
+.compare{margin-top:18px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+th:first-child,td:first-child{text-align:left}
+th{background:#f7f9fc;color:#53647c}
+.note{margin-top:18px}.summary{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:14px}
+.small{font-size:12px;color:var(--muted)}
+.notice{margin-top:12px;padding:11px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a4b00;font-size:13px}
+.share-box{display:none;margin-top:12px}.share-box.show{display:block}
+.footer{margin:18px 3px;color:var(--muted);font-size:12px}
+.inline-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+@media(max-width:560px){.wrap{padding:11px}.fields,.metrics{grid-template-columns:1fr}.hero{padding:20px}}
+@media print{
+ body{background:#fff}.actions,.inline-actions,.share-box{display:none!important}.wrap{padding:0;max-width:none}.hero,.card{box-shadow:none}
+ .grid{grid-template-columns:1fr 1fr}
+ input,textarea,select{border:0;padding:0;background:transparent;appearance:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section class="hero">
+  <h1 id="heroTitle">澄清醫院印表機租賃方案互動試算</h1>
+  <p><strong id="heroSupplier">提案單位：有朋科技有限公司</strong></p>
+  <p id="heroCustomer">客戶：澄清醫院</p>
+  <p>本頁可直接修改方案內容及數字，所有金額將即時計算。</p>
+  <div class="actions">
+    <button class="btn-white" onclick="copyShareLink()">產生並複製分享連結</button>
+    <button class="btn-ghost" onclick="window.print()">列印／另存PDF</button>
+    <button class="btn-ghost" onclick="exportCSV()">匯出CSV</button>
+    <button class="btn-ghost" onclick="saveLocal()">儲存本機設定</button>
+    <button class="btn-ghost" onclick="resetAll()">恢復預設值</button>
+  </div>
+</section>
+
+<section class="card meta">
+  <div class="fields">
+    <div class="field"><label>提案單位</label><input id="supplier" value="有朋科技有限公司"></div>
+    <div class="field"><label>客戶名稱</label><input id="customer" value="澄清醫院"></div>
+    <div class="field full"><label>提案標題</label><input id="title" value="印表機租賃方案互動試算"></div>
+    <div class="field"><label>報價日期</label><input id="quoteDate" type="date" value="2026-07-17"></div>
+    <div class="field"><label>報價有效天數</label><input id="validDays" type="number" value="30"></div>
+    <div class="field"><label>營業稅率（%）</label><input id="taxRate" type="number" step="0.1" value="5"></div>
+    <div class="field"><label>租金計算模式</label>
+      <select id="billingMode">
+        <option value="full">每台設備均計完整合約期</option>
+        <option value="staged">分批安裝，依各批實際月數計租</option>
+      </select>
+    </div>
+    <div class="field full"><label>共同說明</label><textarea id="commonNote">設備依澄清醫院實際需求分批安裝及驗收；正式交付期程、保固維護、耗材供應及提前終止條件，以雙方最終簽署文件為準。</textarea></div>
+  </div>
+  <div class="share-box" id="shareBox">
+    <label>可分享網址</label>
+    <input id="shareUrl" readonly>
+    <div class="small">此網址會把目前輸入值寫入網址片段，不會將資料傳送至伺服器。</div>
+  </div>
+</section>
+
+<div class="grid">
+<section class="card">
+  <div class="plan-title">
+    <h2>方案A</h2><span class="badge">L3310</span>
+  </div>
+  <div class="section-title">方案名稱與內容</div>
+  <div class="fields">
+    <div class="field full"><label>方案名稱</label><input id="a_name" value="L3310 租賃主機＋備機方案"></div>
+    <div class="field"><label>機型</label><input id="a_model" value="L3310"></div>
+    <div class="field"><label>計租主機數</label><input id="a_units" type="number" value="60"></div>
+    <div class="field"><label>備用機數</label><input id="a_backup" type="number" value="60"></div>
+    <div class="field"><label>合約月數</label><input id="a_term" type="number" value="36"></div>
+    <div class="field"><label>每台月租（含稅）</label><input id="a_rent" type="number" value="650"></div>
+    <div class="field"><label>一次性費用（含稅）</label><input id="a_once" type="number" value="0"></div>
+    <div class="field"><label>墨水總量（顆）</label><input id="a_ink" type="number" value="1200"></div>
+    <div class="field"><label>紙匣數量（個）</label><input id="a_tray" type="number" value="0"></div>
+    <div class="field"><label>每月安裝台數</label><input id="a_batch" type="number" value="20"></div>
+    <div class="field full"><label>安裝／交付規劃</label><textarea id="a_delivery">依實際需求分批交付，每月主機下單20台；每批至少提供160顆墨水，預計於2027年2月28日前完成主機出貨。</textarea></div>
+    <div class="field full"><label>服務內容</label><textarea id="a_service">提供60台租賃主機及60台備用機；合約期間提供墨水總量1,200顆。備機原則上僅於正式租賃主機故障時替換使用。</textarea></div>
+  </div>
+  <div class="metrics">
+    <div class="metric primary"><div class="k">每月滿載租金</div><div class="v" id="a_monthly">—</div></div>
+    <div class="metric"><div class="k">合約總額（含稅）</div><div class="v" id="a_total">—</div></div>
+    <div class="metric"><div class="k">合約總額（未稅）</div><div class="v" id="a_exTax">—</div></div>
+    <div class="metric good"><div class="k">平均每台設備月收入</div><div class="v" id="a_perAsset">—</div></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="plan-title">
+    <h2>方案B</h2><span class="badge">M5399</span>
+  </div>
+  <div class="inline-actions">
+    <button class="btn-soft" onclick="setRent('b',1360)">1,360元</button>
+    <button class="btn-soft" onclick="setRent('b',1300)">1,300元</button>
+    <button class="btn-soft" onclick="setRent('b',1254)">1,254元</button>
+  </div>
+  <div class="section-title">方案名稱與內容</div>
+  <div class="fields">
+    <div class="field full"><label>方案名稱</label><input id="b_name" value="M5399 130台租賃方案"></div>
+    <div class="field"><label>機型</label><input id="b_model" value="M5399"></div>
+    <div class="field"><label>計租主機數</label><input id="b_units" type="number" value="130"></div>
+    <div class="field"><label>備用機數</label><input id="b_backup" type="number" value="0"></div>
+    <div class="field"><label>合約月數</label><input id="b_term" type="number" value="30"></div>
+    <div class="field"><label>每台月租（含稅）</label><input id="b_rent" type="number" value="1360"></div>
+    <div class="field"><label>一次性費用（含稅）</label><input id="b_once" type="number" value="0"></div>
+    <div class="field"><label>墨水總量（顆）</label><input id="b_ink" type="number" value="1040"></div>
+    <div class="field"><label>紙匣數量（個）</label><input id="b_tray" type="number" value="70"></div>
+    <div class="field"><label>每月安裝台數</label><input id="b_batch" type="number" value="20"></div>
+    <div class="field full"><label>安裝／交付規劃</label><textarea id="b_delivery">合計130台，採分批安裝；9月至翌年1月每月20台，2月安裝30台，預計於2月底完成。</textarea></div>
+    <div class="field full"><label>服務內容</label><textarea id="b_service">提供M5399共130台、墨水總量1,040顆及紙匣70個。墨水依實際使用需求分批交付，累計供應量以1,040顆為原則。</textarea></div>
+  </div>
+  <div class="metrics">
+    <div class="metric primary"><div class="k">每月滿載租金</div><div class="v" id="b_monthly">—</div></div>
+    <div class="metric"><div class="k">合約總額（含稅）</div><div class="v" id="b_total">—</div></div>
+    <div class="metric"><div class="k">合約總額（未稅）</div><div class="v" id="b_exTax">—</div></div>
+    <div class="metric good"><div class="k">平均每台設備月收入</div><div class="v" id="b_perAsset">—</div></div>
+  </div>
+</section>
+</div>
+
+<section class="card compare">
+  <h2 style="margin-top:0">兩方案即時比較</h2>
+  <table>
+    <thead><tr><th>項目</th><th>方案A</th><th>方案B</th><th>差異</th></tr></thead>
+    <tbody id="compareBody"></tbody>
+  </table>
+</section>
+
+<section class="card note">
+  <h2 style="margin-top:0">會議討論摘要</h2>
+  <div class="inline-actions"><button class="btn-dark" onclick="copySummary()">複製摘要</button></div>
+  <div class="summary" id="summary"></div>
+  <div class="notice">提醒：本試算頁屬商務討論工具，不等同正式報價單或契約。正式內容仍應確認租金起算、設備驗收、維護時效、耗材上限、備機使用、遺失損壞及提前終止責任。</div>
+</section>
+
+<div class="footer">© 有朋科技有限公司｜澄清醫院印表機租賃方案試算</div>
+</div>
+
+<script>
+const fields=["supplier","customer","title","quoteDate","validDays","taxRate","billingMode","commonNote",
+"a_name","a_model","a_units","a_backup","a_term","a_rent","a_once","a_ink","a_tray","a_batch","a_delivery","a_service",
+"b_name","b_model","b_units","b_backup","b_term","b_rent","b_once","b_ink","b_tray","b_batch","b_delivery","b_service"];
+const defaults={};
+document.addEventListener("DOMContentLoaded",()=>{
+ fields.forEach(id=>{const e=document.getElementById(id);defaults[id]=e.value;e.addEventListener("input",calc);e.addEventListener("change",calc)});
+ loadFromHash() || loadLocal();
+ calc();
+});
+function val(id){return Number(document.getElementById(id).value)||0}
+function txt(id){return document.getElementById(id).value}
+function money(x){return new Intl.NumberFormat("zh-TW",{style:"currency",currency:"TWD",maximumFractionDigits:0}).format(x||0)}
+function num(x){return new Intl.NumberFormat("zh-TW",{maximumFractionDigits:0}).format(x||0)}
+function stagedUnitMonths(units,term,batch){
+ let left=Math.max(0,Math.round(units)),m=0,total=0,b=Math.max(1,Math.round(batch));
+ while(left>0){const q=Math.min(left,b);total+=q*Math.max(0,term-m);left-=q;m++}
+ return total;
+}
+function plan(p){
+ const units=val(p+"_units"),backup=val(p+"_backup"),term=val(p+"_term"),rent=val(p+"_rent"),once=val(p+"_once"),batch=val(p+"_batch");
+ const mode=txt("billingMode");
+ const unitMonths=mode==="full"?units*term:stagedUnitMonths(units,term,batch);
+ const total=unitMonths*rent+once;
+ const tax=val("taxRate")/100;
+ return {units,backup,term,rent,once,batch,unitMonths,total,exTax:total/(1+tax),monthly:units*rent,perAsset:(units+backup)&&term?total/(units+backup)/term:0};
+}
+function calc(){
+ const a=plan("a"),b=plan("b");
+ document.getElementById("heroTitle").textContent=txt("customer")+"｜"+txt("title");
+ document.getElementById("heroSupplier").textContent="提案單位："+txt("supplier");
+ document.getElementById("heroCustomer").textContent="客戶："+txt("customer");
+ render("a",a);render("b",b);
+ const rows=[
+ ["機型",txt("a_model"),txt("b_model"),txt("a_model")===txt("b_model")?"相同":"不同機型"],
+ ["計租主機",num(a.units)+"台",num(b.units)+"台",num(Math.abs(a.units-b.units))+"台"],
+ ["備用機",num(a.backup)+"台",num(b.backup)+"台",num(Math.abs(a.backup-b.backup))+"台"],
+ ["合約期間",num(a.term)+"個月",num(b.term)+"個月",num(Math.abs(a.term-b.term))+"個月"],
+ ["每台月租（含稅）",money(a.rent),money(b.rent),money(Math.abs(a.rent-b.rent))],
+ ["每月滿載租金",money(a.monthly),money(b.monthly),money(Math.abs(a.monthly-b.monthly))],
+ ["合約總額（含稅）",money(a.total),money(b.total),money(Math.abs(a.total-b.total))],
+ ["墨水總量",num(val("a_ink"))+"顆",num(val("b_ink"))+"顆",num(Math.abs(val("a_ink")-val("b_ink")))+"顆"],
+ ["紙匣數量",num(val("a_tray"))+"個",num(val("b_tray"))+"個",num(Math.abs(val("a_tray")-val("b_tray")))+"個"]
+ ];
+ document.getElementById("compareBody").innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("");
+ renderSummary(a,b);
+}
+function render(p,x){
+ document.getElementById(p+"_monthly").textContent=money(x.monthly);
+ document.getElementById(p+"_total").textContent=money(x.total);
+ document.getElementById(p+"_exTax").textContent=money(x.exTax);
+ document.getElementById(p+"_perAsset").textContent=money(x.perAsset);
+}
+function renderSummary(a,b){
+ const mode=txt("billingMode")==="full"?"每台設備均計完整合約期間":"依分批安裝月份計算各批實際租賃月數";
+ const valid=new Date(txt("quoteDate"));valid.setDate(valid.getDate()+val("validDays"));
+ const validText=isNaN(valid)?"未設定":valid.toLocaleDateString("zh-TW");
+ document.getElementById("summary").textContent=
+`${txt("supplier")}擬就${txt("customer")}印表機租賃需求提出下列兩項並列方案：
+
+【方案A｜${txt("a_name")}】
+機型${txt("a_model")}；計租主機${num(a.units)}台，另提供備機${num(a.backup)}台；合約${num(a.term)}個月；每台月租${money(a.rent)}（含稅）；預估合約總額${money(a.total)}（含稅）。墨水${num(val("a_ink"))}顆，紙匣${num(val("a_tray"))}個。
+交付規劃：${txt("a_delivery")}
+服務內容：${txt("a_service")}
+
+【方案B｜${txt("b_name")}】
+機型${txt("b_model")}；計租主機${num(b.units)}台，另提供備機${num(b.backup)}台；合約${num(b.term)}個月；每台月租${money(b.rent)}（含稅）；預估合約總額${money(b.total)}（含稅）。墨水${num(val("b_ink"))}顆，紙匣${num(val("b_tray"))}個。
+交付規劃：${txt("b_delivery")}
+服務內容：${txt("b_service")}
+
+【共同條件】
+租金計算方式：${mode}。
+${txt("commonNote")}
+本次報價日期為${txt("quoteDate")||"未設定"}，暫定有效至${validText}。`;
+}
+function setRent(p,v){document.getElementById(p+"_rent").value=v;calc()}
+function getState(){const o={};fields.forEach(id=>o[id]=document.getElementById(id).value);return o}
+function applyState(o){fields.forEach(id=>{if(o&&o[id]!==undefined)document.getElementById(id).value=o[id]})}
+function encodeState(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+function decodeState(s){return JSON.parse(decodeURIComponent(escape(atob(s))))}
+function copyShareLink(){
+ const u=location.href.split("#")[0]+"#data="+encodeURIComponent(encodeState(getState()));
+ history.replaceState(null,"",u);
+ document.getElementById("shareUrl").value=u;
+ document.getElementById("shareBox").classList.add("show");
+ navigator.clipboard.writeText(u).then(()=>alert("分享連結已複製。"));
+}
+function loadFromHash(){
+ try{
+  const h=location.hash.match(/#data=([^&]+)/);
+  if(!h)return false;
+  applyState(decodeState(decodeURIComponent(h[1])));return true;
+ }catch(e){return false}
+}
+function saveLocal(){localStorage.setItem("youpeng_ccgh_public",JSON.stringify(getState()));alert("已儲存在此瀏覽器。")}
+function loadLocal(){try{const o=JSON.parse(localStorage.getItem("youpeng_ccgh_public")||"null");if(o){applyState(o);return true}}catch(e){}return false}
+function resetAll(){if(!confirm("確定恢復預設值？"))return;applyState(defaults);localStorage.removeItem("youpeng_ccgh_public");history.replaceState(null,"",location.href.split("#")[0]);calc()}
+function copySummary(){navigator.clipboard.writeText(document.getElementById("summary").textContent).then(()=>alert("摘要已複製。"))}
+function exportCSV(){
+ const a=plan("a"),b=plan("b");
+ const rows=[["項目","方案A","方案B"],["方案名稱",txt("a_name"),txt("b_name")],["機型",txt("a_model"),txt("b_model")],
+ ["計租主機數",a.units,b.units],["備機數",a.backup,b.backup],["合約月數",a.term,b.term],["每台月租含稅",a.rent,b.rent],
+ ["每月滿載租金",a.monthly,b.monthly],["合約總額含稅",a.total,b.total],["合約總額未稅",a.exTax,b.exTax],
+ ["墨水總量",val("a_ink"),val("b_ink")],["紙匣數量",val("a_tray"),val("b_tray")]];
+ const csv="\ufeff"+rows.map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(",")).join("\n");
+ const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),u=URL.createObjectURL(blob),aTag=document.createElement("a");
+ aTag.href=u;aTag.download="有朋科技_澄清醫院_方案試算.csv";aTag.click();URL.revokeObjectURL(u);
+}
+</script>
+</body>
+</html>
